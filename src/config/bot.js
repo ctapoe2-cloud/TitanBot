@@ -1,4 +1,4 @@
-```js
+
 import { logger } from '../utils/logger.js';
 
 export const botConfig = {
@@ -457,26 +457,32 @@ export function validateConfig(config) {
 
   if (process.env.NODE_ENV !== "production") {
     logger.debug("Environment variables check:");
+
     logger.debug(
       "DISCORD_TOKEN exists:",
       !!process.env.DISCORD_TOKEN
     );
+
     logger.debug(
       "TOKEN exists:",
       !!process.env.TOKEN
     );
+
     logger.debug(
       "CLIENT_ID exists:",
       !!process.env.CLIENT_ID
     );
+
     logger.debug(
       "GUILD_ID exists:",
       !!process.env.GUILD_ID
     );
+
     logger.debug(
       "POSTGRES_HOST exists:",
       !!process.env.POSTGRES_HOST
     );
+
     logger.debug(
       "NODE_ENV:",
       process.env.NODE_ENV
@@ -606,6 +612,10 @@ export function isMaintenanceMode() {
   return botConfig.commands?.maintenanceMode === true;
 }
 
+// =========================
+// FIXED BOT MESSAGE HELPER
+// =========================
+
 export function getBotMessage(
   key,
   replacements = {}
@@ -616,13 +626,9 @@ export function getBotMessage(
   for (const [placeholder, value] of Object.entries(
     replacements
   )) {
-    message = message.replace(
-      new RegExp(
-        `\\{${placeholder}\\}`,
-        "g"
-      ),
-      String(value)
-    );
+    message = message
+      .split("{" + placeholder + "}")
+      .join(String(value));
   }
 
   return message;
@@ -753,4 +759,3 @@ export function getRandomColor() {
 }
 
 export default botConfig;
-```
