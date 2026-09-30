@@ -1,751 +1,82 @@
-import { logger } from '../utils/logger.js';
+import {
+  SlashCommandBuilder,
+  PermissionFlagsBits,
+  ActivityType,
+} from "discord.js";
 
-export const botConfig = {
-  // =========================
-  // BOT PRESENCE
-  // =========================
-  presence: {
-    // Discord status:
-    // "online" | "idle" | "dnd" | "invisible"
-    status: "dnd",
+export default {
+  data: new SlashCommandBuilder()
+    .setName("setstatus")
+    .setDescription("Change the bot's Discord status")
+    .addStringOption((option) =>
+      option
+        .setName("text")
+        .setDescription("What the bot should display")
+        .setRequired(true)
+    )
+    .addStringOption((option) =>
+      option
+        .setName("type")
+        .setDescription("Activity type")
+        .setRequired(false)
+        .addChoices(
+          { name: "Playing", value: "playing" },
+          { name: "Listening", value: "listening" },
+          { name: "Watching", value: "watching" },
+          { name: "Competing", value: "competing" }
+        )
+    )
+    .addStringOption((option) =>
+      option
+        .setName("status")
+        .setDescription("Bot status")
+        .setRequired(false)
+        .addChoices(
+          { name: "Online", value: "online" },
+          { name: "Idle", value: "idle" },
+          { name: "Do Not Disturb", value: "dnd" },
+          { name: "Invisible", value: "invisible" }
+        )
+    ),
 
-    // Activity shown underneath the bot name.
-    // 0 = Playing
-    // 1 = Streaming
-    // 2 = Listening
-    // 3 = Watching
-    // 4 = Custom
-    // 5 = Competing
-    activities: [
-      {
-        name: "Music",
-        state: "Listening to music",
-        type: 2,
-      },
-    ],
-  },
-
-  // =========================
-  // COMMAND BEHAVIOR
-  // =========================
-  commands: {
-    // Bot owner IDs from OWNER_IDS.
-    owners:
+  async execute(interaction) {
+    const ownerIds =
       process.env.OWNER_IDS
         ?.split(",")
         .map((id) => id.trim())
-        .filter(Boolean) || [],
-
-    // Default command cooldown in seconds.
-    defaultCooldown: 3,
-
-    // Delete old commands before registering new ones.
-    deleteCommands: false,
-
-    // Optional test guild.
-    testGuildId: process.env.TEST_GUILD_ID,
-
-    // Maintenance mode.
-    maintenanceMode: process.env.MAINTENANCE_MODE === "true",
-
-    // Prefix commands.
-    prefix: process.env.PREFIX || "!",
-  },
-
-  // =========================
-  // APPLICATIONS
-  // =========================
-  applications: {
-    defaultQuestions: [
-      {
-        question: "What is your name?",
-        required: true,
-      },
-      {
-        question: "How old are you?",
-        required: true,
-      },
-      {
-        question: "Why do you want to join?",
-        required: true,
-      },
-    ],
-
-    statusColors: {
-      pending: "#FFA500",
-      approved: "#00FF00",
-      denied: "#FF0000",
-    },
-
-    applicationCooldown: 24,
-
-    deleteDeniedAfter: 7,
-
-    deleteApprovedAfter: 30,
-
-    managerRoles: [],
-  },
-
-  // =========================
-  // EMBED COLORS
-  // =========================
-  embeds: {
-    colors: {
-      primary: "#336699",
-      secondary: "#2F3136",
-
-      success: "#57F287",
-      error: "#ED4245",
-      warning: "#FEE75C",
-      info: "#3498DB",
-
-      light: "#FFFFFF",
-      dark: "#202225",
-      gray: "#99AAB5",
-
-      blurple: "#5865F2",
-      green: "#57F287",
-      yellow: "#FEE75C",
-      fuchsia: "#EB459E",
-      red: "#ED4245",
-      black: "#000000",
-
-      giveaway: {
-        active: "#57F287",
-        ended: "#ED4245",
-      },
-
-      ticket: {
-        open: "#57F287",
-        claimed: "#FAA61A",
-        closed: "#ED4245",
-        pending: "#99AAB5",
-      },
-
-      economy: "#F1C40F",
-      birthday: "#E91E63",
-      moderation: "#9B59B6",
-
-      priority: {
-        none: "#95A5A6",
-        low: "#3498db",
-        medium: "#2ecc71",
-        high: "#f1c40f",
-        urgent: "#e74c3c",
-      },
-    },
-
-    footer: {
-      text: "Titan Music",
-      icon: null,
-    },
-
-    thumbnail: null,
-
-    author: {
-      name: null,
-      icon: null,
-      url: null,
-    },
-  },
-
-  // =========================
-  // ECONOMY
-  // =========================
-  economy: {
-    currency: {
-      name: "coins",
-      namePlural: "coins",
-      symbol: "$",
-    },
-
-    startingBalance: 0,
-
-    baseBankCapacity: 100000,
-
-    dailyAmount: 100,
-
-    workMin: 10,
-    workMax: 100,
-
-    begMin: 5,
-    begMax: 50,
-
-    cooldowns: {
-      daily: 24 * 60 * 60 * 1000,
-      work: 60 * 60 * 1000,
-      crime: 2 * 60 * 60 * 1000,
-      rob: 4 * 60 * 60 * 1000,
-    },
-
-    robSuccessRate: 0.4,
-
-    robFailJailTime: 3600000,
-  },
-
-  // =========================
-  // SHOP
-  // =========================
-  shop: {},
-
-  // =========================
-  // TICKETS
-  // =========================
-  tickets: {
-    defaultCategory: null,
-
-    supportRoles: [],
-
-    priorities: {
-      none: {
-        emoji: "⚪",
-        color: "#95A5A6",
-        label: "None",
-      },
-
-      low: {
-        emoji: "🟢",
-        color: "#2ECC71",
-        label: "Low",
-      },
-
-      medium: {
-        emoji: "🟡",
-        color: "#F1C40F",
-        label: "Medium",
-      },
-
-      high: {
-        emoji: "🔴",
-        color: "#E74C3C",
-        label: "High",
-      },
-
-      urgent: {
-        emoji: "🚨",
-        color: "#E91E63",
-        label: "Urgent",
-      },
-    },
-
-    defaultPriority: "none",
-
-    archiveCategory: null,
-
-    logChannel: null,
-  },
-
-  // =========================
-  // GIVEAWAYS
-  // =========================
-  giveaways: {
-    defaultDuration: 86400000,
-
-    minimumWinners: 1,
-
-    maximumWinners: 10,
-
-    minimumDuration: 300000,
-
-    maximumDuration: 2592000000,
-
-    allowedRoles: [],
-
-    bypassRoles: [],
-  },
-
-  // =========================
-  // BIRTHDAY
-  // =========================
-  birthday: {
-    defaultRole: null,
-
-    announcementChannel: null,
-
-    timezone: "UTC",
-  },
-
-  // =========================
-  // VERIFICATION
-  // =========================
-  verification: {
-    defaultMessage:
-      "Click the button below to verify yourself and gain access to the server!",
-
-    defaultButtonText: "Verify",
-
-    autoVerify: {
-      defaultCriteria: "none",
-
-      defaultAccountAgeDays: 7,
-
-      serverSizeThreshold: 1000,
-
-      minAccountAge: 1,
-
-      maxAccountAge: 365,
-
-      sendDMNotification: true,
-
-      criteria: {
-        account_age: "Account must be older than specified days",
-        server_size: "All users if server has less than 1000 members",
-        none: "All users immediately",
-      },
-    },
-
-    verificationCooldown: 5000,
-
-    maxVerificationAttempts: 3,
-
-    attemptWindow: 60000,
-
-    maxCooldownEntries: 10000,
-
-    maxAttemptEntries: 10000,
-
-    cooldownCleanupInterval: 300000,
-
-    maxAuditMetadataBytes: 4096,
-
-    maxInMemoryAuditEntries: 1000,
-
-    logAllVerifications: true,
-
-    keepAuditTrail: true,
-  },
-
-  // =========================
-  // WELCOME / GOODBYE
-  // =========================
-  welcome: {
-    defaultWelcomeMessage:
-      "Welcome {user} to {server}! We now have {memberCount} members!",
-
-    defaultGoodbyeMessage:
-      "{user} has left the server. We now have {memberCount} members.",
-
-    defaultWelcomeChannel: null,
-
-    defaultGoodbyeChannel: null,
-  },
-
-  // =========================
-  // COUNTER CHANNELS
-  // =========================
-  counters: {
-    defaults: {
-      name: "{name} Counter",
-
-      description: "Server {name} counter",
-
-      type: "voice",
-
-      channelName: "{name}-{count}",
-    },
-
-    permissions: {
-      deny: ["VIEW_CHANNEL"],
-
-      allow: [
-        "VIEW_CHANNEL",
-        "CONNECT",
-        "SPEAK",
-      ],
-    },
-
-    messages: {
-      created: "✅ Created counter **{name}**",
-
-      deleted: "🗑️ Deleted counter **{name}**",
-
-      updated: "🔄 Updated counter **{name}**",
-    },
-
-    types: {
-      members: {
-        name: "👥 Members",
-
-        description: "Total members in the server",
-
-        getCount: (guild) =>
-          guild.memberCount.toString(),
-      },
-
-      bots: {
-        name: "🤖 Bots",
-
-        description: "Total bot accounts in the server",
-
-        getCount: (guild) =>
-          guild.members.cache
-            .filter((m) => m.user.bot)
-            .size
-            .toString(),
-      },
-
-      members_only: {
-        name: "👤 Humans",
-
-        description: "Total human members (non-bots)",
-
-        getCount: (guild) =>
-          guild.members.cache
-            .filter((m) => !m.user.bot)
-            .size
-            .toString(),
-      },
-    },
-  },
-
-  // =========================
-  // GENERIC BOT MESSAGES
-  // =========================
-  messages: {
-    noPermission:
-      "You do not have permission to use this command.",
-
-    cooldownActive:
-      "Please wait {time} before using this command again.",
-
-    errorOccurred:
-      "An error occurred while executing this command.",
-
-    missingPermissions:
-      "I am missing required permissions to perform this action.",
-
-    commandDisabled:
-      "This command has been disabled.",
-
-    maintenanceMode:
-      "The bot is currently in maintenance mode.",
-  },
-
-  // =========================
-  // FEATURE TOGGLES
-  // =========================
-  // MUSIC-FOCUSED CONFIGURATION
-  features: {
-    // Disabled systems
-    economy: false,
-    leveling: false,
-    moderation: false,
-    logging: false,
-    welcome: false,
-
-    tickets: false,
-    giveaways: false,
-    birthday: false,
-
-    verification: false,
-    reactionRoles: false,
-
-    search: false,
-    tools: false,
-    utility: false,
-    community: false,
-    fun: false,
-
-    // Music system
-    music: true,
-
-    // Voice is required for music.
-    voice: true,
-
-    // Counter can remain enabled for bot/server statistics.
-    counter: true,
-
-    // Join-to-create is disabled because this is a music-focused bot.
-    joinToCreate: false,
-  },
-};
-
-// ============================================================
-// CONFIG VALIDATION
-// ============================================================
-
-export function validateConfig(config) {
-  const errors = [];
-
-  if (process.env.NODE_ENV !== "production") {
-    logger.debug("Environment variables check:");
-
-    logger.debug(
-      "DISCORD_TOKEN exists:",
-      !!process.env.DISCORD_TOKEN,
-    );
-
-    logger.debug(
-      "TOKEN exists:",
-      !!process.env.TOKEN,
-    );
-
-    logger.debug(
-      "CLIENT_ID exists:",
-      !!process.env.CLIENT_ID,
-    );
-
-    logger.debug(
-      "GUILD_ID exists:",
-      !!process.env.GUILD_ID,
-    );
-
-    logger.debug(
-      "POSTGRES_HOST exists:",
-      !!process.env.POSTGRES_HOST,
-    );
-
-    logger.debug(
-      "NODE_ENV:",
-      process.env.NODE_ENV,
-    );
-  }
-
-  if (!process.env.DISCORD_TOKEN && !process.env.TOKEN) {
-    errors.push(
-      "Bot token is required (DISCORD_TOKEN or TOKEN environment variable)",
-    );
-  }
-
-  if (!process.env.CLIENT_ID) {
-    errors.push(
-      "Client ID is required (CLIENT_ID environment variable)",
-    );
-  }
-
-  if (process.env.NODE_ENV === "production") {
-    const hasConnectionUrl = Boolean(
-      process.env.POSTGRES_URL ||
-      process.env.DATABASE_URL,
-    );
-
-    if (!hasConnectionUrl) {
-      if (!process.env.POSTGRES_HOST) {
-        errors.push(
-          "PostgreSQL connection is required in production (set DATABASE_URL/POSTGRES_URL, or POSTGRES_HOST)",
-        );
-      }
-
-      if (!process.env.POSTGRES_USER) {
-        errors.push(
-          "PostgreSQL user is required in production (set DATABASE_URL/POSTGRES_URL, or POSTGRES_USER)",
-        );
-      }
-
-      if (!process.env.POSTGRES_PASSWORD) {
-        errors.push(
-          "PostgreSQL password is required in production (set DATABASE_URL/POSTGRES_URL, or POSTGRES_PASSWORD)",
-        );
-      }
+        .filter(Boolean) || [];
+
+    if (!ownerIds.includes(interaction.user.id)) {
+      return interaction.reply({
+        content: "❌ Only the bot owner can use this command.",
+        ephemeral: true,
+      });
     }
-  }
 
-  return errors;
-}
+    const text = interaction.options.getString("text");
+    const type = interaction.options.getString("type") || "listening";
+    const status = interaction.options.getString("status") || "dnd";
 
-// ============================================================
-// RUN CONFIG VALIDATION
-// ============================================================
+    const activityTypes = {
+      playing: ActivityType.Playing,
+      listening: ActivityType.Listening,
+      watching: ActivityType.Watching,
+      competing: ActivityType.Competing,
+    };
 
-const configErrors = validateConfig(botConfig);
+    interaction.client.user.setPresence({
+      status,
+      activities: [
+        {
+          name: text,
+          type: activityTypes[type],
+        },
+      ],
+    });
 
-if (configErrors.length > 0) {
-  logger.error(
-    "Bot configuration errors:",
-    configErrors.join("\n"),
-  );
-
-  if (process.env.NODE_ENV === "production") {
-    process.exit(1);
-  }
-}
-
-// ============================================================
-// EXPORT
-// ============================================================
-
-export const BotConfig = botConfig;
-
-// ============================================================
-// COMMAND CATEGORY → FEATURE MAP
-// ============================================================
-
-const COMMAND_CATEGORY_FEATURE_MAP = {
-  birthday: "birthday",
-  community: "community",
-  economy: "economy",
-  fun: "fun",
-  giveaway: "giveaways",
-  jointocreate: "joinToCreate",
-  leveling: "leveling",
-  logging: "logging",
-  moderation: "moderation",
-  music: "music",
-  reaction_roles: "reactionRoles",
-  search: "search",
-  serverstats: "counter",
-  ticket: "tickets",
-  tools: "tools",
-  utility: "utility",
-  verification: "verification",
-  welcome: "welcome",
+    return interaction.reply({
+      content: `✅ Status changed to **${status}** — ${type} **${text}**`,
+      ephemeral: true,
+    });
+  },
 };
-
-// ============================================================
-// HELPERS
-// ============================================================
-
-function normalizeCategoryKey(category) {
-  return String(category || "")
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "_");
-}
-
-export function getCommandPrefix() {
-  return botConfig.commands?.prefix ?? "!";
-}
-
-export function getBotOwners() {
-  return (botConfig.commands?.owners ?? [])
-    .map((id) => String(id).trim())
-    .filter(Boolean);
-}
-
-export function isBotOwner(userId) {
-  if (!userId) {
-    return false;
-  }
-
-  return getBotOwners().includes(String(userId));
-}
-
-export function isMaintenanceMode() {
-  return botConfig.commands?.maintenanceMode === true;
-}
-
-export function getBotMessage(key, replacements = {}) {
-  let message = botConfig.messages?.[key] || key;
-
-  for (const [placeholder, value] of Object.entries(
-    replacements,
-  )) {
-    message = message.replace(
-      new RegExp(`\\{${placeholder}\\}`, "g"),
-      String(value),
-    );
-  }
-
-  return message;
-}
-
-export function isFeatureEnabled(featureKey) {
-  if (!featureKey) {
-    return true;
-  }
-
-  return botConfig.features?.[featureKey] !== false;
-}
-
-export function isCommandCategoryEnabled(category) {
-  const normalized = normalizeCategoryKey(category);
-
-  if (!normalized || normalized === "core") {
-    return true;
-  }
-
-  const featureKey =
-    COMMAND_CATEGORY_FEATURE_MAP[normalized];
-
-  if (!featureKey) {
-    return true;
-  }
-
-  return isFeatureEnabled(featureKey);
-}
-
-export function getApplicationStatusColor(status) {
-  const colors =
-    botConfig.applications?.statusColors || {};
-
-  const hex = colors[status];
-
-  return hex
-    ? getColor(hex)
-    : getColor(
-        status === "approved"
-          ? "success"
-          : status === "denied"
-            ? "error"
-            : "warning",
-      );
-}
-
-export function getDefaultApplicationQuestions() {
-  return (
-    botConfig.applications?.defaultQuestions || []
-  )
-    .map((entry) =>
-      typeof entry === "string"
-        ? entry
-        : entry.question,
-    )
-    .filter(Boolean);
-}
-
-export function getColor(
-  path,
-  fallback = "#99AAB5",
-) {
-  if (typeof path === "number") {
-    return path;
-  }
-
-  if (
-    typeof path === "string" &&
-    path.startsWith("#")
-  ) {
-    return parseInt(
-      path.replace("#", ""),
-      16,
-    );
-  }
-
-  const result = path
-    .split(".")
-    .reduce(
-      (obj, key) =>
-        obj && obj[key] !== undefined
-          ? obj[key]
-          : fallback,
-      botConfig.embeds.colors,
-    );
-
-  if (
-    typeof result === "string" &&
-    result.startsWith("#")
-  ) {
-    return parseInt(
-      result.replace("#", ""),
-      16,
-    );
-  }
-
-  return result;
-}
-
-export function getRandomColor() {
-  const colors = Object.values(
-    botConfig.embeds.colors,
-  ).flatMap((color) =>
-    typeof color === "string"
-      ? color
-      : Object.values(color),
-  );
-
-  return colors[
-    Math.floor(Math.random() * colors.length)
-  ];
-}
-
-export default botConfig;
