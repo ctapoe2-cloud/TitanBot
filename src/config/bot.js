@@ -7,7 +7,7 @@ export const botConfig = {
 
     activities: [
       {
-        name: "Music",
+        name: "Watching Clovix",
         type: 2,
       },
     ],
