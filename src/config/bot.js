@@ -3,7 +3,7 @@ export const botConfig = {
   // BOT PRESENCE (what users see under the bot name)
   // =========================
   presence: {
-    status: "idle",
+    status: "streaming",
 
     activities: [
       {
